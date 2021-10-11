@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "lint": "eslint **/*.ts",
-    "lint:fix": "eslint **/*.ts --fix",
+    "lint": "eslint **/**/*.ts",
+    "lint:fix": "eslint **/**/*.ts --fix",
     "dev": "nodemon src/server.ts",
     "start": "node src/server.ts",
     "build": "tsc"

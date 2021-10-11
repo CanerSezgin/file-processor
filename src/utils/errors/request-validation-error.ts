@@ -1,11 +1,11 @@
-import { ValidationError } from 'express-validator';
-import CustomError from './custom-error';
+import { ValidationError } from 'express-validator'
+import CustomError from './custom-error'
 
 export default class RequestValidationError extends CustomError {
   statusCode = 422;
 
   constructor(private errors: ValidationError[]) {
-    super('Invalid Request Parameters');
+    super('Invalid Request Parameters')
   }
 
   serializeErrors = () =>
