@@ -3,6 +3,9 @@ import { body } from 'express-validator'
 import validationMiddleware from '../middlewares/validation.middleware'
 import ValidationError from '../utils/errors/validation-error'
 
+import { ProcessType } from '../services/Processor'
+import { CountWordsProcessor } from '../services/CountWordsProcessor'
+
 const router = express.Router()
 
 router.post(
@@ -23,6 +26,12 @@ router.post(
         )
       }
 
+      console.log('starting to processing...')
+      const textInput = 'dsaf dsaf dsaf dsaf dsaf dsagfsd hgfdh dfsg'
+      const fsInput = 'test.txt'
+      const uriInput = 'https://raw.githubusercontent.com/CanerSezgin/reky/master/README.md'
+
+      await new CountWordsProcessor(textInput, ProcessType.Text).process()
       /* Queues.trialQueue.add(
         { text, path, uri },
         {

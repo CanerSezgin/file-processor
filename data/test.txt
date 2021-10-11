@@ -1,0 +1,5 @@
+this is very small text file example
+which contains couple of words with some numbers and symbols 
+more lines here. 12548 12 4854 (1545) (!!some_words_with_symbols
+what_about_a_snake_case here we go.
+whatAboutACamelCase here we go.
