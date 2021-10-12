@@ -1,4 +1,4 @@
-import { KeyValue, IKeyValueStorage  } from '../../types'
+import { KeyValue, IKeyValueStorage, IDatabaseModel  } from '../../types'
 
 export enum UpsertionType {
   ADD_UP,
@@ -6,7 +6,7 @@ export enum UpsertionType {
 }
 
 export default class ProcessorStorage {
-  constructor(private _keyValueStorage: IKeyValueStorage) {}
+  constructor(private _client: IDatabaseModel<KeyValue<string>>) {}
 
   async upsertOne(
     key: string,
@@ -14,18 +14,18 @@ export default class ProcessorStorage {
     upsertionType: UpsertionType = UpsertionType.CHANGE
   ) {
     if (upsertionType === UpsertionType.ADD_UP) {
-      const currentValue = await this._keyValueStorage.get(key)
+      const record = await this._client.findOne(key)
 
-      if (currentValue) {
-        await this._keyValueStorage.set(
+      if (record) {
+        await this._client.update(
           key,
-          parseFloat(currentValue) + parseFloat(newValue)
+          parseFloat(record.value) + parseFloat(newValue)
         )
       } else {
-        await this._keyValueStorage.set(key, newValue)
+        await this._client.create(key, newValue)
       }
     } else if (upsertionType === UpsertionType.CHANGE) {
-      await this._keyValueStorage.set(key, newValue)
+      await this._client.update(key, newValue)
     }
   }
 
@@ -38,13 +38,13 @@ export default class ProcessorStorage {
   }
 
   async getRecords(query: string) {
-    return this._keyValueStorage.getRecords(query)
+    return this._client.findMany(query)
   }
 
   async deleteByQuery(query: string) {
-    const records = await this._keyValueStorage.getRecords(query)
+    const records = await this._client.findMany(query)
     for (const record of records) {
-      await this._keyValueStorage.del(record.key)
+      await this._client.delete(record.key)
     }
   }
 }

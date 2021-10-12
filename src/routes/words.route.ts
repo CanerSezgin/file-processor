@@ -7,16 +7,13 @@ import ValidationError from '../utils/errors/validation-error'
 import { ProcessType } from '../services/processors/Processor'
 import { CountWordsProcessor } from '../services/processors/CountWordsProcessor'
 
-import RedisKeyValueStorage from '../services/storages/KeyValueStorage/RedisKeyValueStorage'
 import MemoryKeyValueStorage from '../services/storages/KeyValueStorage/MemoryKeyValueStorage'
 import ProcessorStorage from '../services/storages/ProcessorStorage'
 
-import { countWordsService } from '../services'
+import { countWordsService, tempProcessorStorage } from '../services'
 
 const router = express.Router()
 
-// todo: move somewhere else
-const tempProcessorStorage = new ProcessorStorage(new RedisKeyValueStorage())
 
 router.post(
   '/count',

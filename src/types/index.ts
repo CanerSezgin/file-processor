@@ -1,5 +1,3 @@
-import { createRedisClient, IRedisClient } from '../lib/redis'
-
 export type KeyValue<ValueType> = {
   key: string;
   value: ValueType;
