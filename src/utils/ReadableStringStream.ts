@@ -1,13 +1,15 @@
-import { Readable } from 'stream'
+import { Readable } from 'stream';
 
-export default class ReadableString extends Readable {
+export default (str: string) => Readable.from([str]);
+
+/* export default class ReadableString extends Readable {
   private sent = false;
 
   constructor(private str: string) {
     super()
   }
 
-  _read() {
+  async _read() {
     if (!this.sent) {
       this.push(Buffer.from(this.str))
       this.sent = true
@@ -15,4 +17,4 @@ export default class ReadableString extends Readable {
       this.push(null)
     }
   }
-}
+} */

@@ -1,7 +1,14 @@
-import stream, { TransformCallback } from 'stream';
-import BadRequestError from '../utils/errors/bad-request-error';
+import stream, { Readable, TransformCallback } from 'stream';
 import memoryUsageLogger from '../utils/memoryUsageLogger';
 import { Processor } from './Processor';
+
+import RedisKeyValueStorage from './storages/KeyValueStorage/RedisKeyValueStorage';
+import MemoryKeyValueStorage from './storages/KeyValueStorage/MemoryKeyValueStorage';
+import ProcessorStorage, { UpsertionType } from './storages/ProcessorStorage';
+
+const countWordsProcessorStorage = new ProcessorStorage(
+  new MemoryKeyValueStorage()
+);
 
 const countWords = (input: string) => {
   const regexPattern = /\w+/g;
@@ -37,6 +44,7 @@ export default class CountWordsTransformer extends stream.Transform {
     encoding: BufferEncoding,
     done: TransformCallback
   ) {
+    console.log('transform init');
     this.noOfChunks++;
 
     if (Buffer.isBuffer(chunk)) {
@@ -47,8 +55,11 @@ export default class CountWordsTransformer extends stream.Transform {
 
     for (const record of Object.entries(stats)) {
       const [key, value] = record;
-      console.log(record);
-      //await processRedisService.countwords.upsertTempRecord('www', key, value);
+      await countWordsProcessorStorage.upsertOne(
+        `caner_${key}`,
+        value,
+        UpsertionType.ADD_UP
+      );
     }
 
     const { rss, log: logMemoryUsage } = memoryUsageLogger();
@@ -58,7 +69,9 @@ export default class CountWordsTransformer extends stream.Transform {
       this.maxRSS = rss;
     }
 
-    done();
+    const r = await countWordsProcessorStorage.getRecords('');
+    console.log({ r });
+    done(null, JSON.stringify(stats));
   }
 
   end() {
@@ -73,14 +86,28 @@ export class CountWordsProcessor extends Processor {
     return new Promise((resolve, reject) => {
       try {
         const readstream = this._processor.createReadStream(this._input);
-        readstream.pipe(new CountWordsTransformer()).pipe(process.stdout);
-        readstream.on('end', () => {
-          console.log('end of countwords stream');
+        readstream.pipe(new CountWordsTransformer(), {
+          end: true,
+        });
+
+        /* transformStream.on('data', (chunk) => {
+          console.log("......................... DATA ................")
+        }) */
+
+        readstream.on('close', async () => {
+          console.log('@>>> end');
+          const records = await this.getRecords();
+          console.log('RECORDS GOT');
+          console.log({ records });
           resolve(true);
         });
       } catch (error) {
         reject(error);
       }
     });
+  }
+  async getRecords() {
+    console.log('getting records ....');
+    return countWordsProcessorStorage.getRecords('');
   }
 }

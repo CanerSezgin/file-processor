@@ -29,7 +29,11 @@ router.post(
     try {
       console.log('starting to processing...')
 
-      await new CountWordsProcessor(resourceValue, resourceType).process()
+      const countWordProcessor = new CountWordsProcessor(resourceValue, resourceType) 
+      await countWordProcessor.process()
+      const records = await countWordProcessor.getRecords()
+      console.log(records)
+
       /* Queues.trialQueue.add(
         { text, path, uri },
         {
