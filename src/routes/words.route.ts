@@ -6,7 +6,17 @@ import ValidationError from '../utils/errors/validation-error'
 import { ProcessType } from '../services/Processor'
 import { CountWordsProcessor } from '../services/CountWordsProcessor'
 
+import RedisKeyValueStorage from '../services/storages/KeyValueStorage/RedisKeyValueStorage'
+import MemoryKeyValueStorage from '../services/storages/KeyValueStorage/MemoryKeyValueStorage'
+import ProcessorStorage, {
+  UpsertionType,
+} from '../services/storages/ProcessorStorage'
+
 const router = express.Router()
+
+// todo: move somewhere else
+const tempProcessorStorage = new ProcessorStorage(new RedisKeyValueStorage())
+//const db = new Database(new RedisDB())
 
 router.post(
   '/count',
@@ -29,10 +39,15 @@ router.post(
     try {
       console.log('starting to processing...')
 
-      const countWordProcessor = new CountWordsProcessor(resourceValue, resourceType) 
-      await countWordProcessor.process()
-      const records = await countWordProcessor.getRecords()
-      console.log(records)
+      const countWordProcessor = new CountWordsProcessor(
+        resourceValue,
+        resourceType,
+        tempProcessorStorage
+      )
+      const { processKey } = await countWordProcessor.process()
+      const records = await countWordProcessor.getTempRecords(processKey)
+
+      console.log({ processKey, records })
 
       /* Queues.trialQueue.add(
         { text, path, uri },

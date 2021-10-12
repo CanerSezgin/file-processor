@@ -17,6 +17,7 @@ export default class RedisKeyValueStorage implements IKeyValueStorage {
   }
   async getRecords(query: string): Promise<KeyValue<string>[]> {
     const records = await this.client.getKeyValues(query)
+    //await this.client.flushDbAsync()
     return records
   }
 }
