@@ -18,7 +18,6 @@ const router = express.Router()
 // todo: move somewhere else
 const tempProcessorStorage = new ProcessorStorage(new RedisKeyValueStorage())
 
-
 router.post(
   '/count',
   [
@@ -50,6 +49,22 @@ router.post(
       const records = await countWordProcessor.getTempRecords(processKey)
       console.log({ processKey, records })
 
+      // Add All Records of ProcessKey Into Main DB
+      await Promise.all(
+        records.map((record) =>
+          countWordsService.upsertCounts(
+            record.key.split(`${processKey}_`)[1],
+            parseInt(record.value)
+          )
+        )
+      )
+
+      // Clean Temp DB of ProcessKey
+      await countWordProcessor.deleteTempRecords(processKey)
+
+      const records2 = await countWordProcessor.getTempRecords(processKey)
+      console.log({ processKey, records2 })
+
       /* Queues.trialQueue.add(
         { text, path, uri },
         {
@@ -72,7 +87,6 @@ router.get(
     const { word } = req.params
 
     try {
-
       const counts = await countWordsService.getCounts(word)
       res.status(200).json({ word, counts })
     } catch (error) {
@@ -80,6 +94,5 @@ router.get(
     }
   }
 )
-
 
 export default router
