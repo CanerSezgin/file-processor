@@ -1,22 +1,23 @@
 import express, { Request, Response, NextFunction } from 'express'
 import { body } from 'express-validator'
 import validationMiddleware from '../middlewares/validation.middleware'
+import wait from '../utils/wait'
 import ValidationError from '../utils/errors/validation-error'
 
-import { ProcessType } from '../services/Processor'
-import { CountWordsProcessor } from '../services/CountWordsProcessor'
+import { ProcessType } from '../services/processors/Processor'
+import { CountWordsProcessor } from '../services/processors/CountWordsProcessor'
 
 import RedisKeyValueStorage from '../services/storages/KeyValueStorage/RedisKeyValueStorage'
 import MemoryKeyValueStorage from '../services/storages/KeyValueStorage/MemoryKeyValueStorage'
-import ProcessorStorage, {
-  UpsertionType,
-} from '../services/storages/ProcessorStorage'
+import ProcessorStorage from '../services/storages/ProcessorStorage'
+
+import { countWordsService } from '../services'
 
 const router = express.Router()
 
 // todo: move somewhere else
 const tempProcessorStorage = new ProcessorStorage(new RedisKeyValueStorage())
-//const db = new Database(new RedisDB())
+
 
 router.post(
   '/count',
@@ -45,8 +46,8 @@ router.post(
         tempProcessorStorage
       )
       const { processKey } = await countWordProcessor.process()
+      await wait(100) // [This is a hacky solution] adding extra 100 ms just for redis client latency between write and read request.
       const records = await countWordProcessor.getTempRecords(processKey)
-
       console.log({ processKey, records })
 
       /* Queues.trialQueue.add(
@@ -64,5 +65,21 @@ router.post(
     }
   }
 )
+
+router.get(
+  '/stats/:word',
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { word } = req.params
+
+    try {
+
+      const counts = await countWordsService.getCounts(word)
+      res.status(200).json({ word, counts })
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
 
 export default router

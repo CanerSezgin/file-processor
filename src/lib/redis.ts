@@ -1,8 +1,17 @@
-import redis from 'redis'
+import redis, { RedisClient } from 'redis'
 import { promisify } from 'util'
 import { KeyValue } from '../types'
 
-export const createRedisClient = (config: any = {}) => {
+export interface IRedisClient {
+  getAsync: (arg1: string) => Promise<string | null>;
+  setAsync: (arg1: string, arg2: string) => Promise<unknown>;
+  delAsync: (arg1: string | string[]) => Promise<void>;
+  flushDbAsync: () => Promise<unknown>;
+  getKeyValues: (query?: string) => Promise<KeyValue<any>[]>;
+  delAsyncWithQuery: (query: string) => Promise<void>;
+}
+
+export const createRedisClient = (config: any = {}): IRedisClient => {
   const client = redis.createClient(config)
 
   client.on('error', function (error: any) {
@@ -15,9 +24,7 @@ export const createRedisClient = (config: any = {}) => {
   const delAsync = promisify<string | string[]>(client.del).bind(client)
   const flushDbAsync = promisify(client.flushdb).bind(client)
 
-  const getKeyValues = async (
-    query: string = ''
-  ): Promise<KeyValue<any>[]> => {
+  const getKeyValues = async (query: string = ''): Promise<KeyValue<any>[]> => {
     const keys = (await keysAsync(`${query}*`)) as string[]
     return Promise.all(
       keys.map(async (key) => {
@@ -33,7 +40,6 @@ export const createRedisClient = (config: any = {}) => {
   }
 
   return {
-    client,
     getAsync,
     setAsync,
     delAsync,

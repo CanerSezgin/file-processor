@@ -1,7 +1,6 @@
-import { KeyValue } from '../../../types'
-import { IKeyValueStorage } from './IKeyValueStorage'
+import { KeyValue, IKeyValueStorage } from '../../../types'
 
-export default  class MemoryKeyValueStorage implements IKeyValueStorage {
+export default class MemoryKeyValueStorage implements IKeyValueStorage {
   private storage: Record<string, string> = {};
 
   async get(key: string) {

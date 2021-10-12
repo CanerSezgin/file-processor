@@ -1,5 +1,4 @@
-import { KeyValue } from '../../types'
-import { IKeyValueStorage } from './KeyValueStorage/IKeyValueStorage'
+import { KeyValue, IKeyValueStorage  } from '../../types'
 
 export enum UpsertionType {
   ADD_UP,

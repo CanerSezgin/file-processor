@@ -2,8 +2,8 @@ import fs from 'fs'
 import { join } from 'path'
 import request from 'request'
 import { Stream, Readable } from 'stream'
-import NotFoundError from '../utils/errors/not-found-error'
-import ProcessorStorage from './storages/ProcessorStorage'
+import NotFoundError from '../../utils/errors/not-found-error'
+import ProcessorStorage from '../storages/ProcessorStorage'
 
 interface IProcessor {
   createReadStream(input: string): Stream;
@@ -59,6 +59,14 @@ export abstract class Processor {
       case ProcessType.URI:
         return new URIProcessor()
     }
+  }
+
+  async getTempRecords(processKey: string) {
+    return this.tempStorage.getRecords(`${processKey}_`)
+  }
+
+  async deleteTempRecords(processKey: string) {
+    return this.tempStorage.deleteByQuery(`${processKey}_`)
   }
 
   abstract process(): Promise<any>;

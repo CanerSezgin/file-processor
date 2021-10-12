@@ -1,6 +1,5 @@
-import { KeyValue } from '../../../types'
+import { KeyValue, IKeyValueStorage } from '../../../types'
 import { createRedisClient } from '../../../lib/redis'
-import { IKeyValueStorage } from './IKeyValueStorage'
 
 export default class RedisKeyValueStorage implements IKeyValueStorage {
   private client = createRedisClient({ db: 2 });

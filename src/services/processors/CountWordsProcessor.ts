@@ -1,8 +1,8 @@
 import stream, { Readable, TransformCallback } from 'stream'
-import memoryUsageLogger from '../utils/memoryUsageLogger'
+import memoryUsageLogger from '../../utils/memoryUsageLogger'
 import { Processor } from './Processor'
 
-import ProcessorStorage, { UpsertionType } from './storages/ProcessorStorage'
+import ProcessorStorage, { UpsertionType } from '../storages/ProcessorStorage'
 
 const countWords = (input: string) => {
   const regexPattern = /\w+/g
@@ -26,7 +26,7 @@ export default class CountWordsTransformer extends stream.Transform {
 
   constructor(
     options = {},
-    private _processKey: string,
+    private readonly _processKey: string,
     private _tempStorage: ProcessorStorage
   ) {
     super({
@@ -53,6 +53,20 @@ export default class CountWordsTransformer extends stream.Transform {
 
     for (const record of Object.entries(stats)) {
       const [key, value] = record
+
+      /**
+       * At this point there are 3 options 
+       * 1. Directly Update Database 
+       * --- Downside is that during processing, some errors may occur and processing may be interrupted.
+       * --- This cause inconsistency because processed chunks already updated the db however there are some missing chunks because process is interruped.
+       * 
+       * 2. Create an object in memory, hold it until whole file is processed (update each chunk is processed) then update db. 
+       * --- Downside is that for large files memory limitations can exceed, processing will fail
+       * 
+       * 3. Create a temporary storage (db), write everything into this db, when processing is done, move everything into Main DB. Clean up temp data.
+       * --- If some error happens during the processing, main db won't be affected. (No need to rollback)
+       * --- If processing fails at some point, it can be run again from queue system. 
+       */
       await this._tempStorage.upsertOne(
         `${this._processKey}_${key}`,
         value,
@@ -93,28 +107,15 @@ export class CountWordsProcessor extends Processor {
 
         readstream.on('close', async () => {
           console.log('@>>> end')
-          //await this.deleteTempRecords(processKey)
           const allrecords = await this.tempStorage.getRecords('')
           console.log({ allrecords })
-
-          const records = await this.getTempRecords(processKey)
-          console.log('RECORDS GOT')
-          console.log({ records })
           resolve({ processKey })
         })
       } catch (error) {
-        reject(error)
+        this.deleteTempRecords(processKey).then(() => {
+          reject(error)
+        })
       }
     })
   }
-
-  async getTempRecords(processKey: string) {
-    return this.tempStorage.getRecords(`${processKey}_`)
-  }
-
-  async deleteTempRecords(processKey: string) {
-    return this.tempStorage.deleteByQuery(`${processKey}_`)
-  }
-
-  async saveToDB() {}
 }
