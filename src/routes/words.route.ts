@@ -11,27 +11,25 @@ const router = express.Router()
 router.post(
   '/count',
   [
-    body('text').optional().isString().withMessage('TEXT should be STRING'),
-    body('path').optional().isString().withMessage('PATH should be STRING'),
-    body('uri').optional().isDataURI().withMessage('URI should be STRING & URI'),
+    body('resourceType')
+      .notEmpty()
+      .withMessage('Resource Type is Missing')
+      .isIn(['text', 'fs', 'uri'])
+      .withMessage('Resource Type should be one of them. [ text | fs | uri ]'),
+    body('resourceValue')
+      .notEmpty()
+      .withMessage('Resource Value is Missing')
+      .isString()
+      .withMessage('Resource Value has to be STRING'),
     validationMiddleware,
   ],
   async (req: Request, res: Response, next: NextFunction) => {
-    const { text = '', path = '', uri = '' } = req.body
+    const { resourceValue, resourceType } = req.body
 
     try {
-      if (!text && !path && !uri) {
-        throw new ValidationError(
-          'You need to provide one of them in request body. >>> text | path | uri'
-        )
-      }
-
       console.log('starting to processing...')
-      const textInput = 'dsaf dsaf dsaf dsaf dsaf dsagfsd hgfdh dfsg'
-      const fsInput = 'test.txt'
-      const uriInput = 'https://raw.githubusercontent.com/CanerSezgin/reky/master/README.md'
 
-      await new CountWordsProcessor(textInput, ProcessType.Text).process()
+      await new CountWordsProcessor(resourceValue, resourceType).process()
       /* Queues.trialQueue.add(
         { text, path, uri },
         {

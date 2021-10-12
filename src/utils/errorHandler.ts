@@ -8,6 +8,6 @@ export default (err: Error, _req: Request, res: Response, _next: NextFunction): 
   }
 
   res.status(400).json({
-    errors: [{ message: 'Something went wrong' }],
+    errors: [{ message: err.message || 'Something went wrong' }],
   })
 }

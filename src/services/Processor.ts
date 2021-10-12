@@ -3,6 +3,7 @@ import { join } from 'path'
 import request from 'request'
 import { Stream } from 'stream'
 import ReadableStringStream from '../utils/ReadableStringStream'
+import NotFoundError from '../utils/errors/not-found-error'
 
 interface IProcessor {
   createReadStream(input: string): Stream;
@@ -22,8 +23,10 @@ class TextProcessor implements IProcessor {
 
 class FSProcessor implements IProcessor {
   createReadStream(path: string) {
-    const rs = fs.createReadStream(join(__dirname, '../../data', path))
-    return rs
+    const filePath = join(__dirname, '../../data', path)
+    const isExist = fs.existsSync(filePath)
+    if(!isExist) throw new NotFoundError(`Resource Not Found in File System. Path: ${filePath}`)
+    return fs.createReadStream(filePath)
   }
 }
 

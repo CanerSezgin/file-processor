@@ -1,13 +1,13 @@
-import CustomError from './custom-error'
+import CustomError from './custom-error';
 
 export default class NotFoundError extends CustomError {
-  statusCode = 404;
+  statusCode = 422;
 
-  constructor() {
-    super('Route not found')
+  constructor(message: string = 'Not Found') {
+    super(message);
 
-    Object.setPrototypeOf(this, NotFoundError.prototype)
+    Object.setPrototypeOf(this, NotFoundError.prototype);
   }
 
-  serializeErrors = () => [{ message: 'Not Found' }];
+  serializeErrors = () => [{ message: this.message }];
 }

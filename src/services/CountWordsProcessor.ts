@@ -1,22 +1,23 @@
-import stream, { TransformCallback } from 'stream'
-import memoryUsageLogger from '../utils/memoryUsageLogger'
-import { Processor, ProcessType } from './Processor'
+import stream, { TransformCallback } from 'stream';
+import BadRequestError from '../utils/errors/bad-request-error';
+import memoryUsageLogger from '../utils/memoryUsageLogger';
+import { Processor } from './Processor';
 
 const countWords = (input: string) => {
-  const regexPattern = /\w+/g
-  const words = input.match(regexPattern) || []
+  const regexPattern = /\w+/g;
+  const words = input.match(regexPattern) || [];
 
   return words.reduce((aggregated, word) => {
-    const lowercaseWord = word.toLowerCase()
+    const lowercaseWord = word.toLowerCase();
 
     if (aggregated.hasOwnProperty(lowercaseWord)) {
-      aggregated[lowercaseWord] += 1
+      aggregated[lowercaseWord] += 1;
     } else {
-      aggregated[lowercaseWord] = 1
+      aggregated[lowercaseWord] = 1;
     }
-    return aggregated
-  }, {} as Record<string, number>)
-}
+    return aggregated;
+  }, {} as Record<string, number>);
+};
 
 export default class CountWordsTransformer extends stream.Transform {
   noOfChunks = 0;
@@ -28,7 +29,7 @@ export default class CountWordsTransformer extends stream.Transform {
       objectMode: true,
       readableObjectMode: true,
       writableObjectMode: true,
-    })
+    });
   }
 
   async _transform(
@@ -36,48 +37,50 @@ export default class CountWordsTransformer extends stream.Transform {
     encoding: BufferEncoding,
     done: TransformCallback
   ) {
-    this.noOfChunks++
+    this.noOfChunks++;
 
     if (Buffer.isBuffer(chunk)) {
-      chunk = chunk.toString('utf8')
+      chunk = chunk.toString('utf8');
     }
 
-    const stats = countWords(chunk)
+    const stats = countWords(chunk);
 
     for (const record of Object.entries(stats)) {
-      const [key, value] = record
-      console.log(record)
+      const [key, value] = record;
+      console.log(record);
       //await processRedisService.countwords.upsertTempRecord('www', key, value);
     }
 
-    const { rss, log: logMemoryUsage } = memoryUsageLogger()
+    const { rss, log: logMemoryUsage } = memoryUsageLogger();
     //logMemoryUsage();
 
     if (this.maxRSS < rss) {
-      this.maxRSS = rss
+      this.maxRSS = rss;
     }
 
-    done()
+    done();
   }
 
   end() {
     console.log(`Entire file was processed.
     Total Chunks: ${this.noOfChunks}
-    Max RSS: ${memoryUsageLogger().format(this.maxRSS)}`)
+    Max RSS: ${memoryUsageLogger().format(this.maxRSS)}`);
   }
 }
 
 export class CountWordsProcessor extends Processor {
   process() {
-    const readstream = this._processor.createReadStream(this._input)
-    console.log(readstream)
-
     return new Promise((resolve, reject) => {
-      readstream.pipe(new CountWordsTransformer()).pipe(process.stdout)
-      readstream.on('end', () => {
-        console.log('end of countwords stream')
-        resolve(true)
-      })
-    })
+      try {
+        const readstream = this._processor.createReadStream(this._input);
+        readstream.pipe(new CountWordsTransformer()).pipe(process.stdout);
+        readstream.on('end', () => {
+          console.log('end of countwords stream');
+          resolve(true);
+        });
+      } catch (error) {
+        reject(error);
+      }
+    });
   }
 }
