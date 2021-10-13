@@ -7,15 +7,15 @@ export const createQueue = (key: string) => {
   })
 
   queue.on('completed', (job) => {
-    console.log('Queue Completed', job.id)
+    console.log('>>> Queue Completed', job.id)
   })
 
   queue.on('error', (error) => {
-    console.log('Queue Error Log', error)
+    console.log('>>> Queue Error Log', error)
   })
 
   queue.on('failed', (job, error) => {
-    console.log('Queue Failed Log', job.id)
+    console.log('>>> Queue Failed Log', job.id)
   })
 
   return queue

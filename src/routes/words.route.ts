@@ -7,7 +7,6 @@ import { Queues } from '../services/queues'
 
 const router = express.Router()
 
-
 router.post(
   '/count',
   [
@@ -27,15 +26,9 @@ router.post(
     const { resourceValue, resourceType } = req.body
 
     try {
-      console.log('starting to processing...')
+      Queues.countWords.queue.add({ resourceValue, resourceType })
 
-      Queues.countWords.queue.add(
-        { resourceValue, resourceType },
-      )
-
-      console.log('added to queue')
-
-      res.status(200).json({ status: 'ok' })
+      res.status(202).json({ status: 'added_to_queue' })
     } catch (error) {
       next(error)
     }

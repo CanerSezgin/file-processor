@@ -19,9 +19,3 @@ export const countWordsService = new CountWordsService(
 export const tempProcessorStorage = new ProcessorStorage(
   new RedisDBModel(tempDB)
 )
-
-mainDB.getKeyValues('').then((r) => console.log('main db records', { r }))
-tempDB.getKeyValues('').then((r) => console.log('temp db records', { r }))
-
-/* mainDB.flushDbAsync()
-tempDB.flushDbAsync() */

@@ -23,7 +23,7 @@ class TextProcessor implements IProcessor {
 
 class FSProcessor implements IProcessor {
   createReadStream(path: string) {
-    const filePath = join(__dirname, '../../data', path)
+    const filePath = join(process.cwd(), './data', path)
     const isExist = fs.existsSync(filePath)
     if (!isExist)
       throw new NotFoundError(

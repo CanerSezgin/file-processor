@@ -4,8 +4,8 @@ import { CountWordsProcessor } from '../../../services/processors/CountWordsProc
 import { countWordsService, tempProcessorStorage } from '../../../services'
 
 export default async (job: QueueJob): Promise<any> => {
-  const { id, data, opts } = job
-  console.log({ id, data, opts })
+  const { id, data } = job
+  console.log('CountWordsJob', id)
 
   const { resourceValue, resourceType } = data
 
@@ -18,7 +18,6 @@ export default async (job: QueueJob): Promise<any> => {
   const { processKey } = await countWordProcessor.process()
   await wait(100) // [This is a hacky solution] adding extra 100 ms just for redis client latency between write and read request.
   const records = await countWordProcessor.getTempRecords(processKey)
-  console.log({ processKey, records })
 
   // Add All Records of ProcessKey Into Main DB
   await Promise.all(
@@ -32,9 +31,4 @@ export default async (job: QueueJob): Promise<any> => {
 
   // Clean Temp DB of ProcessKey
   await countWordProcessor.deleteTempRecords(processKey)
-
-  const records2 = await countWordProcessor.getTempRecords(processKey)
-  console.log({ processKey, records2 })
-
-  return
 }

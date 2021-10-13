@@ -7,7 +7,7 @@
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
     "dev": "nodemon src/server.ts",
-    "start": "node src/server.ts",
+    "start": "node dist/server.js",
     "build": "tsc"
   },
   "author": "Caner Sezgin <ccanersezgin@gmail.com>",

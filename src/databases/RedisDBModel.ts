@@ -18,7 +18,6 @@ export default class RedisDBModel implements IDatabaseModel<KeyValue<string>> {
     return records
   }
   async create(key: string, value: any): Promise<any> {
-    console.log(this.getLocalKey(key))
     await this._client.setAsync(this.getLocalKey(key), value)
   }
   async update(key: string, value: any): Promise<any> {

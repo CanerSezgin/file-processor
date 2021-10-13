@@ -5,7 +5,7 @@ import { Processor } from './Processor'
 import ProcessorStorage, { UpsertionType } from '../storages/ProcessorStorage'
 
 const countWords = (input: string) => {
-  const regexPattern = /\w+/g
+  const regexPattern = /\b[^\d\W]+\b/g
   const words = input.match(regexPattern) || []
 
   return words.reduce((aggregated, word) => {
@@ -22,7 +22,6 @@ const countWords = (input: string) => {
 
 export default class CountWordsTransformer extends stream.Transform {
   noOfChunks = 0;
-  maxRSS = 0;
 
   constructor(
     options = {},
@@ -39,10 +38,9 @@ export default class CountWordsTransformer extends stream.Transform {
 
   async _transform(
     chunk: any,
-    encoding: BufferEncoding,
+    _encoding: BufferEncoding,
     done: TransformCallback
   ) {
-    console.log('transform init')
     this.noOfChunks++
 
     if (Buffer.isBuffer(chunk)) {
@@ -58,7 +56,7 @@ export default class CountWordsTransformer extends stream.Transform {
        * At this point there are 3 options 
        * 1. Directly Update Database 
        * --- Downside is that during processing, some errors may occur and processing may be interrupted.
-       * --- This cause inconsistency because processed chunks already updated the db however there are some missing chunks because process is interruped.
+       * --- This cause inconsistency because processed chunks already updated the db however there are some missing chunks because process is interrupted.
        * 
        * 2. Create an object in memory, hold it until whole file is processed (update each chunk is processed) then update db. 
        * --- Downside is that for large files memory limitations can exceed, processing will fail
@@ -74,20 +72,11 @@ export default class CountWordsTransformer extends stream.Transform {
       )
     }
 
-    const { rss, log: logMemoryUsage } = memoryUsageLogger()
-    //logMemoryUsage();
-
-    if (this.maxRSS < rss) {
-      this.maxRSS = rss
-    }
-
     done(null, JSON.stringify(stats))
   }
 
   end() {
-    console.log(`Entire file was processed.
-    Total Chunks: ${this.noOfChunks}
-    Max RSS: ${memoryUsageLogger().format(this.maxRSS)}`)
+    console.log('Entire file has been processed.')
   }
 }
 
@@ -106,9 +95,6 @@ export class CountWordsProcessor extends Processor {
         )
 
         readstream.on('close', async () => {
-          console.log('@>>> end')
-          const allrecords = await this.tempStorage.getRecords('')
-          console.log({ allrecords })
           resolve({ processKey })
         })
       } catch (error) {
