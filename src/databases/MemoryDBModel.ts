@@ -1,4 +1,4 @@
-import { KeyValue, IDatabaseModel } from '../../types'
+import { KeyValue, IDatabaseModel } from '../types'
 
 export default class MemoryDBModel
   implements IDatabaseModel<KeyValue<any>>

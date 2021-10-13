@@ -18,3 +18,8 @@ export interface IKeyValueStorage {
   getRecords(query: string): Promise<{ key: string; value: string }[]>;
 }
 
+export interface QueueJob {
+  id: string;
+  data: any;
+  opts: any;
+}

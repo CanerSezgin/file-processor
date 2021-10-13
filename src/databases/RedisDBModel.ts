@@ -1,5 +1,5 @@
-import { KeyValue, IDatabaseModel } from '../../types'
-import { IRedisClient } from '../../lib/redis'
+import { KeyValue, IDatabaseModel } from '../types'
+import { IRedisClient } from '../lib/redis'
 
 export default class RedisDBModel implements IDatabaseModel<KeyValue<string>> {
   constructor(private _client: IRedisClient, public collection?: string) {

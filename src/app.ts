@@ -6,6 +6,9 @@ import apiRoutesV1 from './routes'
 import errorHandler from './utils/errorHandler'
 import NotFoundError from './utils/errors/not-found-error'
 
+import { queueServerAdapter } from './services/queues'
+
+
 const app = express()
 
 app.use(json())
@@ -25,6 +28,11 @@ app.get('/favicon.ico', (_: Request, res: Response) => {
 
 // Routes
 app.use('/api/v1', apiRoutesV1)
+
+// Bull Admin Dashboard [No Auth Applied]
+const queueAdminRoute = '/admin/queues'
+queueServerAdapter.setBasePath(queueAdminRoute)
+app.use(queueAdminRoute, queueServerAdapter.getRouter())
 
 app.all('*', () => {
   throw new NotFoundError()

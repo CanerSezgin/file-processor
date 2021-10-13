@@ -3,6 +3,7 @@ import { promisify } from 'util'
 import { KeyValue } from '../types'
 
 export interface IRedisClient {
+  client: RedisClient
   getAsync: (arg1: string) => Promise<string | null>;
   setAsync: (arg1: string, arg2: string) => Promise<unknown>;
   delAsync: (arg1: string | string[]) => Promise<void>;
@@ -40,6 +41,7 @@ export const createRedisClient = (config: any = {}): IRedisClient => {
   }
 
   return {
+    client,
     getAsync,
     setAsync,
     delAsync,
